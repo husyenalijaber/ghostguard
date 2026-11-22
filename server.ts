@@ -85,8 +85,7 @@ const COOKIE_TEXT_HOURLY_LIMIT = getEnvPositiveInt("TEXT_HOURLY_LIMIT", 30);
 const IMAGE_DAILY_LIMIT = getEnvPositiveInt("IMAGE_DAILY_LIMIT", 5);
 // Kuota gambar bersama untuk SEMUA pengguna per hari (melindungi kuota Gemini Free Tier).
 // Diperiksa sebelum kuota per pengguna; naikkan sementara saat uji performa.
-// SEMENTARA untuk uji ulang TC-06/TC-07: 30. Kembali ke 5 pada versi final.
-const GLOBAL_IMAGE_DAILY_LIMIT = getEnvPositiveInt("GLOBAL_IMAGE_DAILY_LIMIT", 30);
+const GLOBAL_IMAGE_DAILY_LIMIT = getEnvPositiveInt("GLOBAL_IMAGE_DAILY_LIMIT", 5);
 
 function getClientIp(req: express.Request): string {
   const forwarded = req.headers["x-forwarded-for"];
