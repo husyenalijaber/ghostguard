@@ -49,7 +49,7 @@ import {
   sanitizeLinkedInText,
   tentukanKategori,
   validasiGambar,
-} from "../lib/analysis";
+} from "../lib/analysis.js";
 
 dotenv.config({ quiet: true });
 

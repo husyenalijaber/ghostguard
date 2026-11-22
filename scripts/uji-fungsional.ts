@@ -21,7 +21,7 @@
 import fs from "fs";
 import path from "path";
 import crypto from "crypto";
-import { sanitizeLinkedInText } from "../lib/analysis";
+import { sanitizeLinkedInText } from "../lib/analysis.js";
 
 const argv = process.argv.slice(2);
 const arg = (n: string, d?: string) => {

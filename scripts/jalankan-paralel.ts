@@ -9,7 +9,7 @@
 import fs from "fs";
 import path from "path";
 import dotenv from "dotenv";
-import { PROMPT_V0, PROMPT_V1, PROMPT_V2, PROMPT_V3, buatKlienGemini, panggilModel, sanitizeLinkedInText, validasiGambar } from "../lib/analysis";
+import { PROMPT_V0, PROMPT_V1, PROMPT_V2, PROMPT_V3, buatKlienGemini, panggilModel, sanitizeLinkedInText, validasiGambar } from "../lib/analysis.js";
 dotenv.config({ quiet: true });
 
 const argv = process.argv.slice(2);

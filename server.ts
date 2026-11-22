@@ -21,7 +21,7 @@ import {
   keluaranValid,
   bentukHasil,
   hasilError,
-} from "./lib/analysis";
+} from "./lib/analysis.js";
 import { Redis } from "@upstash/redis";
 import dotenv from "dotenv";
 
