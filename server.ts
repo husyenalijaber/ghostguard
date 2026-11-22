@@ -82,6 +82,9 @@ function getIpHourlyLimit(): number {
 // Dapat diperkecil sementara saat pengujian (TC-12, TC-14) agar hemat kuota Gemini
 const COOKIE_TEXT_HOURLY_LIMIT = getEnvPositiveInt("TEXT_HOURLY_LIMIT", 30);
 const IMAGE_DAILY_LIMIT = getEnvPositiveInt("IMAGE_DAILY_LIMIT", 5);
+// Kuota gambar bersama untuk SEMUA pengguna per hari (melindungi kuota Gemini Free Tier).
+// Diperiksa sebelum kuota per pengguna; naikkan sementara saat uji performa.
+const GLOBAL_IMAGE_DAILY_LIMIT = getEnvPositiveInt("GLOBAL_IMAGE_DAILY_LIMIT", 5);
 
 function getClientIp(req: express.Request): string {
   const forwarded = req.headers["x-forwarded-for"];
@@ -357,12 +360,15 @@ app.get("/api/quota-status", async (req, res) => {
     const ipHourlyLimit = getIpHourlyLimit();
     const publicEnabled = isPublicServiceEnabled();
 
-    const [globalUsed, ipHourlyUsed, userTextUsed, userImgUsed] = await Promise.all([
+    const [globalUsed, ipHourlyUsed, userTextUsed, userImgUsed, allImgUsed] = await Promise.all([
       getCounterValue(`gg:global:${dateKey}`),
       getCounterValue(`gg:ip:${ipHash}:${hourKey}`),
       getCounterValue(`gg:txt:${cid}:${hourKey}`),
       getCounterValue(`gg:img:${cid}:${dateKey}`),
+      getCounterValue(`gg:img:all:${dateKey}`),
     ]);
+    const imgGlobalRemaining = Math.max(0, GLOBAL_IMAGE_DAILY_LIMIT - allImgUsed);
+    const imgUserRemaining = Math.max(0, IMAGE_DAILY_LIMIT - userImgUsed);
 
     res.json({
       publicEnabled,
@@ -386,9 +392,13 @@ app.get("/api/quota-status", async (req, res) => {
         remaining: Math.max(0, COOKIE_TEXT_HOURLY_LIMIT - userTextUsed),
       },
       image: {
-        max: IMAGE_DAILY_LIMIT,
-        remaining: Math.max(0, IMAGE_DAILY_LIMIT - userImgUsed),
+        max: Math.min(IMAGE_DAILY_LIMIT, GLOBAL_IMAGE_DAILY_LIMIT),
+        remaining: Math.min(imgUserRemaining, imgGlobalRemaining),
         used: userImgUsed,
+        globalMax: GLOBAL_IMAGE_DAILY_LIMIT,
+        globalRemaining: imgGlobalRemaining,
+        userMax: IMAGE_DAILY_LIMIT,
+        userRemaining: imgUserRemaining,
       },
     });
   } catch {
@@ -396,7 +406,12 @@ app.get("/api/quota-status", async (req, res) => {
     res.json({
       publicEnabled: isPublicServiceEnabled(),
       text: { max: COOKIE_TEXT_HOURLY_LIMIT, remaining: COOKIE_TEXT_HOURLY_LIMIT },
-      image: { max: IMAGE_DAILY_LIMIT, remaining: IMAGE_DAILY_LIMIT, used: 0 },
+      image: {
+        max: Math.min(IMAGE_DAILY_LIMIT, GLOBAL_IMAGE_DAILY_LIMIT),
+        remaining: Math.min(IMAGE_DAILY_LIMIT, GLOBAL_IMAGE_DAILY_LIMIT),
+        used: 0,
+        globalMax: GLOBAL_IMAGE_DAILY_LIMIT,
+      },
     });
   }
 });
@@ -549,7 +564,7 @@ app.post("/api/analyze-job", async (req, res) => {
       return tolak(500, PESAN_GAGAL, "tanpa_kunci_api");
     }
 
-    // Kuota berurutan: global harian -> IP per jam -> pengguna (gambar per hari / teks per jam)
+    // Kuota berurutan: global harian -> IP per jam -> gambar bersama per hari -> pengguna (gambar per hari / teks per jam)
     const { dateKey, hourKey } = getJakartaTimeKeys();
     const naik = async (key: string, ttl: number) => {
       const r = await incrementCounterWithTtl(key, ttl);
@@ -566,6 +581,14 @@ app.post("/api/analyze-job", async (req, res) => {
       return tolak(429, "Batas laju permintaan per jam terlampaui. Silakan coba lagi nanti.", "batas_ip");
     }
     if (hasImage) {
+      if ((await naik(`gg:img:all:${dateKey}`, TTL_TWO_DAYS_SECONDS)) > GLOBAL_IMAGE_DAILY_LIMIT) {
+        await rollbackOnce();
+        return tolak(
+          429,
+          `Kuota analisis poster hari ini untuk semua pengguna sudah habis (${GLOBAL_IMAGE_DAILY_LIMIT} per hari). Silakan coba lagi besok; analisis teks LinkedIn tetap dapat digunakan.`,
+          "kuota_gambar_global"
+        );
+      }
       if ((await naik(`gg:img:${cid}:${dateKey}`, TTL_TWO_DAYS_SECONDS)) > IMAGE_DAILY_LIMIT) {
         await rollbackOnce();
         return tolak(429, `Kuota gambar hari ini sudah habis (${IMAGE_DAILY_LIMIT} per hari).`, "kuota_gambar");

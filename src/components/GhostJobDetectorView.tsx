@@ -67,7 +67,8 @@ export const GhostJobDetectorView: React.FC<GhostJobDetectorViewProps> = ({
 
   // Quota & maintenance states
   const [imageQuotaRemaining, setImageQuotaRemaining] = useState<number>(5);
-  const [imageQuotaTotal] = useState<number>(5);
+  const [imageQuotaTotal, setImageQuotaTotal] = useState<number>(5);
+  const [imageQuotaShared, setImageQuotaShared] = useState<boolean>(true);
   const [publicEnabled, setPublicEnabled] = useState<boolean>(true);
   const [maintenanceMessage, setMaintenanceMessage] = useState<string>(
     "Layanan sedang dalam pemeliharaan pengujian."
@@ -125,6 +126,17 @@ export const GhostJobDetectorView: React.FC<GhostJobDetectorViewProps> = ({
           }
           if (data?.image?.remaining !== undefined) {
             setImageQuotaRemaining(data.image.remaining);
+          }
+          if (typeof data?.image?.max === "number") {
+            setImageQuotaTotal(data.image.max);
+          }
+          if (typeof data?.image?.globalMax === "number") {
+            // Kuota bersama: habis untuk semua pengguna bila sisa global yang lebih kecil
+            setImageQuotaShared(
+              typeof data.image.globalRemaining !== "number" ||
+                typeof data.image.userRemaining !== "number" ||
+                data.image.globalRemaining <= data.image.userRemaining
+            );
           }
         }
       }
@@ -303,7 +315,9 @@ export const GhostJobDetectorView: React.FC<GhostJobDetectorViewProps> = ({
     setUploadError(null);
 
     if (imageQuotaRemaining <= 0) {
-      const msg = "Kuota gambar hari ini sudah habis (5 per hari).";
+      const msg = imageQuotaShared
+        ? `Kuota analisis poster hari ini untuk semua pengguna sudah habis (${imageQuotaTotal} per hari). Coba lagi besok.`
+        : `Kuota gambar hari ini sudah habis (${imageQuotaTotal} per hari).`;
       setUploadError(msg);
       onNotify?.({
         type: "error",
@@ -568,7 +582,11 @@ export const GhostJobDetectorView: React.FC<GhostJobDetectorViewProps> = ({
     }
 
     if (!isLinkedIn && hasImages && imageQuotaRemaining <= 0) {
-      setAnalysisError("Kuota gambar hari ini sudah habis (5 per hari).");
+      setAnalysisError(
+        imageQuotaShared
+          ? `Kuota analisis poster hari ini untuk semua pengguna sudah habis (${imageQuotaTotal} per hari). Coba lagi besok.`
+          : `Kuota gambar hari ini sudah habis (${imageQuotaTotal} per hari).`
+      );
       return;
     }
 
@@ -1312,7 +1330,7 @@ export const GhostJobDetectorView: React.FC<GhostJobDetectorViewProps> = ({
                           : "text-slate-800 dark:text-slate-200"
                       }`}
                     >
-                      Sisa kuota gambar hari ini: {imageQuotaRemaining} dari {imageQuotaTotal}
+                      Sisa kuota poster hari ini{imageQuotaShared ? " (bersama semua pengguna)" : ""}: {imageQuotaRemaining} dari {imageQuotaTotal}
                     </span>
                   </div>
                 </div>

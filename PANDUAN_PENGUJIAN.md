@@ -40,7 +40,7 @@ Panduan ini memetakan 19 skenario uji (TC-01 sampai TC-19) pada Bab III ke cara 
 ## 2. Uji fungsional otomatis (TC-05, 10, 12, 13, 14, 15, 16, 18)
 
 1. Di Vercel > Settings > Environment Variables, ubah sementara:
-   `TEXT_HOURLY_LIMIT=3` dan `IMAGE_DAILY_LIMIT=2`, lalu Redeploy.
+   `TEXT_HOURLY_LIMIT=3` dan `IMAGE_DAILY_LIMIT=2`, lalu Redeploy. Pastikan kuota bersama `GLOBAL_IMAGE_DAILY_LIMIT` masih tersisa minimal 3 hari itu (atau naikkan sementara), agar yang menolak analisis ke-3 adalah kuota per pengguna.
 2. Jalankan:
    ```
    npm run uji-fungsional -- --url https://<alamat-aplikasi> --teks data/contoh_iklan.txt --poster data/poster_contoh.jpg

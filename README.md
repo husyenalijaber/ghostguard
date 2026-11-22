@@ -105,7 +105,7 @@ Kedua skenario harus dijalankan pada URL produksi dengan model sebenarnya.
 1. Pastikan aplikasi sudah jalan di Vercel dan `/api/health` mengembalikan `"status":"ok"`.
    Pakai kunci Gemini dari proyek dengan billing aktif; Free Tier akan menolak permintaan bersamaan (HTTP 503).
 2. Naikkan batas sementara di Environment Variables, lalu **Redeploy**:
-   `IP_HOURLY_LIMIT=1000`, `TEXT_HOURLY_LIMIT=1000`, `IMAGE_DAILY_LIMIT=100`, `GLOBAL_DAILY_LIMIT=1000`.
+   `IP_HOURLY_LIMIT=1000`, `TEXT_HOURLY_LIMIT=1000`, `IMAGE_DAILY_LIMIT=100`, `GLOBAL_IMAGE_DAILY_LIMIT=100`, `GLOBAL_DAILY_LIMIT=1000`.
 3. Jalankan dari komputer sendiri (biarkan aplikasi idle kira-kira 15 menit sebelumnya agar cold start terukur):
 
    ```bash
@@ -118,7 +118,7 @@ Kedua skenario harus dijalankan pada URL produksi dengan model sebenarnya.
    TC-06 lulus bila `p95_detik` < 10; TC-07 lulus bila `galat_500_atau_timeout` = 0.
 5. Salin angkanya ke Tabel 28, baris TC-06/TC-07 di Tabel 20, H3 di Tabel 30, Subbab 4.4.1 (rumusan masalah 3),
    Gambar 25, dan Bab V butir 3 (bagian yang ditandai "Menunggu uji Vercel").
-6. Kembalikan batas ke nilai produksi (40, 30, 5, 200) dan Redeploy.
+6. Kembalikan batas ke nilai produksi (`IP_HOURLY_LIMIT=40`, `TEXT_HOURLY_LIMIT=30`, `IMAGE_DAILY_LIMIT=5`, `GLOBAL_IMAGE_DAILY_LIMIT=5`, `GLOBAL_DAILY_LIMIT=200`) dan Redeploy.
 
 ## Keamanan
 
@@ -138,7 +138,8 @@ Kedua skenario harus dijalankan pada URL produksi dengan model sebenarnya.
 |---|---|
 | Panjang teks | 50–10.000 karakter |
 | Gambar | PNG/JPG/WEBP, maks. 3 MB per berkas, sisi terpanjang maks. 4.096 px, 1–5 slide per analisis |
-| Kuota gambar | 5 analisis poster per pengguna per hari |
+| Kuota gambar bersama | 5 analisis poster per hari untuk semua pengguna (`GLOBAL_IMAGE_DAILY_LIMIT`) |
+| Kuota gambar per pengguna | 5 analisis poster per pengguna per hari (`IMAGE_DAILY_LIMIT`) |
 | Batas laju teks | 30 analisis per pengguna per jam |
 | Batas per IP | 40 permintaan per jam (`IP_HOURLY_LIMIT`) |
 | Batas global | 200 analisis per hari (`GLOBAL_DAILY_LIMIT`) |
