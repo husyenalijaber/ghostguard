@@ -1,0 +1,6 @@
+{
+  "name": "GhostGuard - Deteksi Ghost Job & Lowongan Fiktif",
+  "description": "Sistem verifikasi keabsahan lowongan kerja pasar Indonesia berdasarkan 5 kriteria evaluasi komprehensif.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

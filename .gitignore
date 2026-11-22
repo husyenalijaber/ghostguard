@@ -1,0 +1,16 @@
+node_modules/
+build/
+dist/
+coverage/
+.DS_Store
+*.log
+.env*
+!.env.example
+server-dist/
+hasil/
+data/*
+!data/contoh_dataset.csv
+.env
+.env.local
+!data/contoh_iklan.txt
+!data/poster_contoh.jpg

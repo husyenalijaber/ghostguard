@@ -1,0 +1,99 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  color-scheme: light;
+  --gg-bg: #f8f9fa;
+  --gg-surface: #ffffff;
+  --gg-surface-muted: #f1f5f9;
+  --gg-border: #e2e8f0;
+  --gg-text: #0f172a;
+  --gg-text-muted: #475569;
+  --gg-accent: #0f766e;
+}
+
+.dark {
+  color-scheme: dark;
+  --gg-bg: #020617;
+  --gg-surface: #0f172a;
+  --gg-surface-muted: #1e293b;
+  --gg-border: #1e293b;
+  --gg-text: #f8fafc;
+  --gg-text-muted: #cbd5e1;
+  --gg-accent: #14b8a6;
+}
+
+@layer base {
+  html,
+  body {
+    background-color: var(--gg-bg);
+    color: var(--gg-text);
+  }
+
+  body {
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  }
+
+  /* Prevent duplicate native browser password reveal icons alongside custom eye toggle */
+  input[type="password"]::-ms-reveal,
+  input[type="password"]::-ms-clear {
+    display: none;
+  }
+}
+
+/* Markdown table styling */
+.prose table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+  font-size: 0.875rem;
+}
+
+.prose th {
+  background-color: var(--gg-surface-muted);
+  color: var(--gg-text);
+  font-weight: 600;
+  text-align: left;
+  padding: 0.625rem 0.875rem;
+  border: 1px solid var(--gg-border);
+}
+
+.prose td {
+  padding: 0.625rem 0.875rem;
+  border: 1px solid var(--gg-border);
+  color: var(--gg-text-muted);
+}
+
+.prose tr:nth-child(even) {
+  background-color: var(--gg-surface-muted);
+}
+
+/* Custom sleek scrollbars for inner panels */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #334155;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #475569;
+}
+
