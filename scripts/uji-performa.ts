@@ -87,8 +87,15 @@ async function main() {
       rata_detik: ok.reduce((s, v) => s + v, 0) / (ok.length || 1),
       median_detik: ok.length ? persentil(ok, 50) : NaN,
       di_bawah_10_detik: ok.filter((v) => v < 10).length,
+      ditolak_status: urut.filter((r) => r.status !== 200).map((r) => r.status),
+      // TC-06 lulus bila semua permintaan berhasil dan p95 < 10 detik
+      tc06_lulus: ok.length === N && p95 < 10,
     },
-    bersamaan: { n: P, galat_500_atau_timeout: galat, status: paralel.map((r) => r.status) },
+    bersamaan: {
+      n: P, galat_500_atau_timeout: galat, status: paralel.map((r) => r.status),
+      detik: paralel.map((r) => Number((r.ms / 1000).toFixed(3))),
+      tc07_lulus: galat === 0,
+    },
   };
   fs.mkdirSync(OUT, { recursive: true });
   fs.writeFileSync(path.join(OUT, `performa_${jenis}.json`), JSON.stringify(ringkasan, null, 2));
@@ -97,8 +104,9 @@ async function main() {
     "no,status,detik\n" + urut.map((r) => `${r.no},${r.status},${(r.ms / 1000).toFixed(3)}`).join("\n") + "\n"
   );
   console.log(`\nPersentil ke-95 : ${p95.toFixed(2)} detik (target < 10 detik)`);
-  console.log(`Di bawah 10 dtk : ${ringkasan.berurutan.di_bawah_10_detik}/${N} (TC-06 lulus bila ≥ 28)`);
-  console.log(`Galat bersamaan : ${galat}/${P} (TC-07 lulus bila 0)`);
+  console.log(`Berhasil        : ${ok.length}/${N}; di bawah 10 dtk: ${ringkasan.berurutan.di_bawah_10_detik}/${N}`);
+  console.log(`TC-06           : ${ringkasan.berurutan.tc06_lulus ? "LULUS" : "GAGAL"} (semua berhasil dan p95 < 10 detik)`);
+  console.log(`Galat bersamaan : ${galat}/${P} -> TC-07 ${galat === 0 ? "LULUS" : "GAGAL"}`);
   console.log(`Hasil disimpan di folder "${OUT}".`);
 }
 

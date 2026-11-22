@@ -29,6 +29,8 @@ export const MAX_TOKEN_KELUARAN = 4096;
 
 export const TIMEOUT_TEKS_MS = 30_000;
 export const TIMEOUT_GAMBAR_MS = 60_000;
+/** Perkiraan waktu yang disisakan untuk jawaban model setelah menunggu batas laju. */
+const CADANGAN_JAWABAN_MS = 8_000;
 
 export const MIN_TEKS = 50;
 export const MAX_TEKS = 10_000;
@@ -411,6 +413,20 @@ function galatSementara(err: any): boolean {
     /\b50[0234]\b|UNAVAILABLE|high demand|overloaded|INTERNAL|fetch failed|ECONNRESET|ETIMEDOUT/.test(msg);
 }
 
+/**
+ * Penolakan batas laju Gemini (HTTP 429 / RESOURCE_EXHAUSTED).
+ * - harian: kuota per hari habis, tidak ada gunanya mencoba ulang hari ini.
+ * - tungguMs: jeda yang diminta Google (RetryInfo.retryDelay), bila ada.
+ */
+export function infoBatasLaju(err: any): { batasLaju: boolean; harian: boolean; tungguMs: number | null } {
+  const status = Number(err?.status ?? err?.code ?? err?.statusCode);
+  const msg = String(err?.message || err || "");
+  const batasLaju = status === 429 || /RESOURCE_EXHAUSTED|Too Many Requests|rate limit/i.test(msg);
+  const harian = batasLaju && /PerDay|per day|daily/i.test(msg);
+  const m = msg.match(/retryDelay"?\s*[:=]\s*"?(\d+(?:\.\d+)?)s/i) || msg.match(/retry in (\d+(?:\.\d+)?)\s*s/i);
+  return { batasLaju, harian, tungguMs: m ? Math.ceil(Number(m[1]) * 1000) : null };
+}
+
 export class TimeoutError extends Error {}
 
 export interface MasukanAnalisis {
@@ -427,7 +443,7 @@ export interface HasilModel {
   durasiMs: number;
 }
 
-/** Memanggil model sesuai jenis input, dengan pengulangan untuk galat sementara dan batas waktu. */
+/** Memanggil model sesuai jenis input, dengan pengulangan untuk galat sementara, batas laju per menit, dan batas waktu. */
 export async function panggilModel(ai: GoogleGenAI, input: MasukanAnalisis): Promise<HasilModel> {
   const adaGambar = input.gambar.length > 0;
   const model = adaGambar ? MODEL_GAMBAR : MODEL_TEKS;
@@ -473,7 +489,19 @@ export async function panggilModel(ai: GoogleGenAI, input: MasukanAnalisis): Pro
         return resp?.text || "";
       } catch (err) {
         lastErr = err;
-        if (!galatSementara(err) || i === 3) throw err;
+        if (i === 3) throw err;
+        const laju = infoBatasLaju(err);
+        if (laju.batasLaju) {
+          // Batas per menit: tunggu sesuai permintaan Google bila masih muat dalam batas waktu analisis.
+          // Kuota harian habis: langsung dilaporkan (mencoba ulang hanya menambah antrean).
+          if (laju.harian) throw err;
+          const tunggu = (laju.tungguMs ?? 4000) + Math.floor(Math.random() * 300);
+          const sisa = timeoutMs - (Date.now() - mulai) - CADANGAN_JAWABAN_MS;
+          if (tunggu > sisa) throw err;
+          await new Promise((r) => setTimeout(r, tunggu));
+          continue;
+        }
+        if (!galatSementara(err)) throw err;
         await new Promise((r) => setTimeout(r, jeda[i] + Math.floor(Math.random() * 200)));
       }
     }

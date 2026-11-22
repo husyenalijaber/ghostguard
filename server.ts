@@ -21,6 +21,7 @@ import {
   keluaranValid,
   bentukHasil,
   hasilError,
+  infoBatasLaju,
 } from "./lib/analysis.js";
 import { Redis } from "@upstash/redis";
 import dotenv from "dotenv";
@@ -84,7 +85,8 @@ const COOKIE_TEXT_HOURLY_LIMIT = getEnvPositiveInt("TEXT_HOURLY_LIMIT", 30);
 const IMAGE_DAILY_LIMIT = getEnvPositiveInt("IMAGE_DAILY_LIMIT", 5);
 // Kuota gambar bersama untuk SEMUA pengguna per hari (melindungi kuota Gemini Free Tier).
 // Diperiksa sebelum kuota per pengguna; naikkan sementara saat uji performa.
-const GLOBAL_IMAGE_DAILY_LIMIT = getEnvPositiveInt("GLOBAL_IMAGE_DAILY_LIMIT", 5);
+// SEMENTARA untuk uji ulang TC-06/TC-07: 30. Kembali ke 5 pada versi final.
+const GLOBAL_IMAGE_DAILY_LIMIT = getEnvPositiveInt("GLOBAL_IMAGE_DAILY_LIMIT", 30);
 
 function getClientIp(req: express.Request): string {
   const forwarded = req.headers["x-forwarded-for"];
@@ -621,6 +623,14 @@ app.post("/api/analyze-job", async (req, res) => {
       if (galatAuth(apiErr)) {
         console.error("[GhostGuard] GEMINI_API_KEY tidak valid atau tidak aktif. Perbarui di Environment Variables Vercel.");
         return tolak(503, PESAN_GAGAL, "kunci_api");
+      }
+      if (infoBatasLaju(apiErr).harian) {
+        console.error("[GhostGuard] Kuota harian Gemini untuk proyek GEMINI_API_KEY sudah habis.");
+        return tolak(
+          503,
+          "Kuota harian layanan AI sudah habis. Kuota Anda tidak terpotong, silakan coba lagi besok.",
+          "kuota_harian_gemini"
+        );
       }
       if (galatKuotaGemini(apiErr) || galatSibuk(apiErr)) {
         return tolak(503, "Layanan sedang sibuk. Kuota Anda tidak terpotong, silakan coba lagi beberapa saat lagi.", "model_sibuk");

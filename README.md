@@ -69,7 +69,32 @@ git push -u origin main
 3. Redeploy, lalu buka `https://<alamat-aplikasi>/api/health`. Hasil yang benar: `{"status":"ok","redis":"ok"}`.
 
 Variabel opsional: `GLOBAL_DAILY_LIMIT` (default 200 analisis/hari), `IP_HOURLY_LIMIT` (default 40/jam),
-`PUBLIC_ENABLED=false` (mode pemeliharaan), `VITE_TURNSTILE_SITE_KEY` + `TURNSTILE_SECRET_KEY` (anti-bot).
+`PUBLIC_ENABLED=false` (mode pemeliharaan), `VITE_TURNSTILE_SITE_KEY` + `TURNSTILE_SECRET_KEY` (anti-bot),
+`GLOBAL_IMAGE_DAILY_LIMIT` (default 5 poster/hari untuk semua pengguna).
+
+### Mengganti kunci Gemini
+
+1. Buat kunci baru di Google AI Studio (aistudio.google.com → Get API key).
+2. Vercel → project → **Settings → Environment Variables** → `GEMINI_API_KEY` → titik tiga → **Edit** → tempel kunci baru → Save.
+3. **Deployments** → titik tiga pada deployment teratas → **Redeploy**. Kunci baru baru terbaca setelah redeploy.
+4. Uji satu analisis teks di aplikasi. Bila gagal, buka tab **Logs**: alasan teknis (kunci tidak valid, billing, kuota) tercatat di sana.
+5. Hapus kunci lama di AI Studio bila tidak dipakai lagi.
+
+Satu aplikasi memakai satu kunci. Jangan merotasi beberapa kunci/akun Free Tier untuk melewati batas kuota:
+Ketentuan Google APIs melarang upaya mengakali batas penggunaan, dan akun dapat diblokir.
+
+### Menghapus pemakaian kuota hari ini (misalnya setelah uji)
+
+Penghitung disimpan di Upstash. Buka console.upstash.com → database → **Data Browser**, cari kunci
+`gg:img:all:YYYY-MM-DD` (kuota poster bersama) atau `gg:global:YYYY-MM-DD` (batas harian), lalu hapus.
+Tanggal memakai zona WIB. Penghitung juga kedaluwarsa sendiri setelah berganti hari.
+
+### Perilaku saat kuota Gemini Free Tier tercapai
+
+- Batas per menit: aplikasi menunggu sesuai jeda yang diminta Google lalu mencoba ulang, selama masih muat dalam
+  batas waktu analisis (30 detik teks, 60 detik gambar). Bila tidak muat, pengguna menerima pesan "Layanan sedang sibuk".
+- Batas harian: aplikasi langsung menolak dengan pesan "Kuota harian layanan AI sudah habis".
+- Dalam kedua kasus kuota pengguna tidak terpotong.
 
 ## Isi paket final
 
