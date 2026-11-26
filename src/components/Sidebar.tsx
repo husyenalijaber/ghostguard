@@ -1,3 +1,4 @@
+import { GhostGuardLogo } from "./GhostGuardLogo";
 import React from "react";
 import {
   Shield,
@@ -48,9 +49,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           className="w-full p-4 border-b border-slate-200/80 dark:border-slate-800 flex items-start gap-2.5 shrink-0 text-left hover:bg-slate-100/50 dark:hover:bg-slate-800/40 transition-colors cursor-pointer"
           title="Kembali ke Halaman Depan GhostGuard"
         >
-          <div className="w-8 h-8 rounded-lg bg-teal-50 dark:bg-teal-950 border border-teal-200 dark:border-teal-800 flex items-center justify-center text-teal-700 dark:text-teal-300 shrink-0 mt-0.5">
-            <Shield className="w-4 h-4" />
-          </div>
+          <GhostGuardLogo className="w-8 h-8 rounded-lg mt-0.5" />
           <div className="min-w-0">
             <GoogleColoredGhostGuard size="sm" />
             <span className="text-[11px] text-slate-600 dark:text-slate-400 font-medium block leading-snug mt-0.5">

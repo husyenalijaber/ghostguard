@@ -1,6 +1,6 @@
+import { GhostGuardLogo } from "./GhostGuardLogo";
 import React, { useState } from "react";
 import {
-  Shield,
   CheckCircle2,
   ArrowRight,
   Sun,
@@ -70,9 +70,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         {/* Mobile/Tablet Compact Brand Header above card */}
         <div className="flex lg:hidden w-full max-w-md mx-auto items-center justify-between gap-3 px-1">
           <div className="flex items-center gap-2.5 min-w-0">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-slate-900 to-teal-800 text-white flex items-center justify-center shrink-0 shadow-xs">
-              <Shield className="w-4 h-4" />
-            </div>
+            <GhostGuardLogo className="w-9 h-9 rounded-xl shadow-xs" />
             <div className="min-w-0">
               <span className="text-sm font-extrabold tracking-tight text-slate-900 dark:text-white block leading-tight">
                 GhostGuard
@@ -94,9 +92,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         {/* Desktop Left Column: Supporting Context */}
         <div className="hidden lg:flex lg:col-span-5 flex-col justify-center space-y-5 pr-4">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-slate-900 to-teal-800 text-white flex items-center justify-center shadow-sm shrink-0">
-              <Shield className="w-4 h-4" />
-            </div>
+            <GhostGuardLogo className="w-9 h-9 rounded-xl shadow-sm" />
             <div>
               <p className="text-base font-bold tracking-tight text-slate-900 dark:text-white leading-none">
                 GhostGuard
